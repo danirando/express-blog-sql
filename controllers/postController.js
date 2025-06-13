@@ -8,7 +8,6 @@ const index = (req, res) => {
   const sql = "SELECT * FROM `posts`";
   connection.query(sql, (err, results) => {
     if (err) throw err;
-
     res.json({
       data: results,
       status: 200,
@@ -115,19 +114,22 @@ const modify = (req, res) => {
 // DESTROY
 
 const destroy = (req, res) => {
-  const postId = parseInt(req.params.id);
+  const postId = req.params.id;
 
-  const post = posts.find((post) => post.id === postId);
+  const sql = "DELETE FROM posts WHERE id = ?";
 
-  if (!post) {
-    return res
-      .status(404)
-      .json({ error: "404 not found", message: "Post non trovato" });
-  }
+  connection.query(sql, [postId], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Errore nella cancellazione" });
+    }
 
-  posts.splice(posts.indexOf(post), 1);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Post non trovato" });
+    }
 
-  res.sendStatus(204);
+    res.json({ message: "Post eliminato con successo" });
+  });
 };
 
 module.exports = { index, show, store, update, modify, destroy };
